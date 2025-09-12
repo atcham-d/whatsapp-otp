@@ -1,0 +1,564 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp OTP Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --border-color: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* ✅ CHANGE: Replaced solid background with animated gradient */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: var(--dark-gray);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* Important for transition */
+        }
+
+        .form-section {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .form-section.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            position: absolute; /* Hide without taking up space */
+            pointer-events: none;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        p {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #6c757d;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.75rem;
+            background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: 500;
+            min-height: 24px;
+        }
+
+        .message.success {
+            color: var(--success-color);
+        }
+
+        .message.error {
+            color: var(--error-color);
+        }
+        
+        /* Spinner Animation */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        /* ✅ ADDED: Keyframes for the background gradient animation */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+       
+        <div id="send-otp-section" class="form-section">
+            <h1>Register</h1>
+            <p>Enter your details to get an OTP.</p>
+            <form id="send-otp-form">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <input type="tel" id="whatsapp" name="whatsapp" placeholder="WhatsApp Number (e.g., +91...)" required>
+                <button type="submit" id="send-otp-btn">
+                    <span class="button-text">Send OTP</span>
+                </button>
+            </form>
+            <p id="send-otp-message" class="message"></p>
+        </div>
+
+      
+        <div id="verify-otp-section" class="form-section hidden">
+            <h1>Verify OTP</h1>
+            <p>Enter the code sent to your WhatsApp.</p>
+            <form id="verify-otp-form">
+                <input type="text" id="otp" name="otp" placeholder="6-Digit OTP" required pattern="\d{6}">
+                <button type="submit" id="verify-otp-btn">
+                     <span class="button-text">Verify</span>
+                </button>
+            </form>
+            <p id="verify-otp-message" class="message"></p>
+        </div>
+    </div>
+
+    <script>
+        const sendOtpSection = document.getElementById('send-otp-section');
+        const verifyOtpSection = document.getElementById('verify-otp-section');
+
+        const sendOtpForm = document.getElementById('send-otp-form');
+        const verifyOtpForm = document.getElementById('verify-otp-form');
+
+        const sendOtpBtn = document.getElementById('send-otp-btn');
+        const verifyOtpBtn = document.getElementById('verify-otp-btn');
+
+        const sendOtpMessage = document.getElementById('send-otp-message');
+        const verifyOtpMessage = document.getElementById('verify-otp-message');
+
+        let currentRequestId = '';
+
+        function toggleSpinner(button, show) {
+            const buttonText = button.querySelector('.button-text');
+            if (show) {
+                buttonText.innerHTML = '<div class="spinner"></div>';
+                button.disabled = true;
+            } else {
+                buttonText.innerHTML = button.id === 'send-otp-btn' ? 'Send OTP' : 'Verify';
+                button.disabled = false;
+            }
+        }
+
+        // --- Step 1: Handle the "Send OTP" form submission ---
+        sendOtpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            toggleSpinner(sendOtpBtn, true);
+            sendOtpMessage.textContent = '';
+
+            const data = {
+                username: sendOtpForm.username.value,
+                whatsapp: sendOtpForm.whatsapp.value
+            };
+            
+            const sendOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/b9365489-6292-476a-b2fe-7245338f1ea4';
+            try {
+                const response = await fetch(sendOtpUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Failed to send OTP.');
+
+                currentRequestId = result.requestId;
+                sendOtpMessage.className = 'message success';
+                sendOtpMessage.textContent = 'OTP sent successfully!';
+                
+                setTimeout(() => {
+                    sendOtpSection.classList.add('hidden');
+                    verifyOtpSection.classList.remove('hidden');
+                }, 1000);
+
+            } catch (error) {
+                sendOtpMessage.className = 'message error';
+                sendOtpMessage.textContent = error.message;
+            } finally {
+                toggleSpinner(sendOtpBtn, false);
+            }
+        });
+
+        // --- Step 2: Handle the "Verify OTP" form submission ---
+        verifyOtpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            toggleSpinner(verifyOtpBtn, true);
+            verifyOtpMessage.textContent = '';
+            
+            const data = {
+                requestId: currentRequestId,
+                otp: verifyOtpForm.otp.value
+            };
+
+            const verifyOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/3c52a7ee-918f-49c2-9a0e-a9cc7be0ebe4';
+
+            try {
+                const response = await fetch(verifyOtpUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Verification failed.');
+                
+                verifyOtpMessage.className = 'message success';
+                verifyOtpMessage.textContent = 'Verification successful! You are now registered.';
+                
+            } catch (error) {
+                verifyOtpMessage.className = 'message error';
+                verifyOtpMessage.textContent = error.message;
+            } finally {
+                toggleSpinner(verifyOtpBtn, false);
+            }
+        });
+    </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp OTP Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --light-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --border-color: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: var(--dark-gray);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .form-section {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .form-section.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            position: absolute;
+            pointer-events: none;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        p {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #6c757d;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.75rem;
+            background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: 500;
+            min-height: 24px;
+        }
+
+        .message.success {
+            color: var(--success-color);
+        }
+
+        .message.error {
+            color: var(--error-color);
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Step 1: Send OTP Form -->
+        <div id="send-otp-section" class="form-section">
+            <h1>Register</h1>
+            <p>Enter your details to get an OTP.</p>
+            <form id="send-otp-form">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <input type="tel" id="whatsapp" name="whatsapp" placeholder="WhatsApp Number (e.g., +91...)" required>
+                <button type="submit" id="send-otp-btn">
+                    <span class="button-text">Send OTP</span>
+                </button>
+            </form>
+            <p id="send-otp-message" class="message"></p>
+        </div>
+
+        <!-- Step 2: Verify OTP Form (Initially Hidden) -->
+        <div id="verify-otp-section" class="form-section hidden">
+            <h1>Verify OTP</h1>
+            <p>Enter the code sent to your WhatsApp.</p>
+            <form id="verify-otp-form">
+                <input type="text" id="otp" name="otp" placeholder="6-Digit OTP" required pattern="\d{6}">
+                <button type="submit" id="verify-otp-btn">
+                     <span class="button-text">Verify</span>
+                </button>
+            </form>
+            <p id="verify-otp-message" class="message"></p>
+        </div>
+    </div>
+
+    <script>
+        const sendOtpSection = document.getElementById('send-otp-section');
+        const verifyOtpSection = document.getElementById('verify-otp-section');
+        const sendOtpForm = document.getElementById('send-otp-form');
+        const verifyOtpForm = document.getElementById('verify-otp-form');
+        const sendOtpBtn = document.getElementById('send-otp-btn');
+        const verifyOtpBtn = document.getElementById('verify-otp-btn');
+        const sendOtpMessage = document.getElementById('send-otp-message');
+        const verifyOtpMessage = document.getElementById('verify-otp-message');
+
+        let currentRequestId = '';
+
+        function toggleSpinner(button, show) {
+            const buttonText = button.querySelector('.button-text');
+            if (show) {
+                buttonText.innerHTML = '<div class="spinner"></div>';
+                button.disabled = true;
+            } else {
+                buttonText.innerHTML = button.id === 'send-otp-btn' ? 'Send OTP' : 'Verify';
+                button.disabled = false;
+            }
+        }
+
+        sendOtpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            toggleSpinner(sendOtpBtn, true);
+            sendOtpMessage.textContent = '';
+
+            const data = {
+                username: sendOtpForm.username.value,
+                whatsapp: sendOtpForm.whatsapp.value
+            };
+            
+            const sendOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/b9365489-6292-476a-b2fe-7245338f1ea4';
+            try {
+                const response = await fetch(sendOtpUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Failed to send OTP.');
+
+                currentRequestId = result.requestId;
+                sendOtpMessage.className = 'message success';
+                sendOtpMessage.textContent = 'OTP sent successfully!';
+                
+                setTimeout(() => {
+                    sendOtpSection.classList.add('hidden');
+                    verifyOtpSection.classList.remove('hidden');
+                }, 1000);
+
+            } catch (error) {
+                sendOtpMessage.className = 'message error';
+                sendOtpMessage.textContent = error.message;
+            } finally {
+                toggleSpinner(sendOtpBtn, false);
+            }
+        });
+
+        verifyOtpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            toggleSpinner(verifyOtpBtn, true);
+            verifyOtpMessage.textContent = '';
+            
+            const data = {
+                requestId: currentRequestId,
+                otp: verifyOtpForm.otp.value
+            };
+
+            const verifyOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/3c52a7ee-918f-49c2-9a0e-a9cc7be0ebe4';
+
+            try {
+                const response = await fetch(verifyOtpUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Verification failed.');
+                
+                verifyOtpMessage.className = 'message success';
+                verifyOtpMessage.textContent = 'Verification successful! You are now registered.';
+                
+            } catch (error) {
+                verifyOtpMessage.className = 'message error';
+                verifyOtpMessage.textContent = error.message;
+            } finally {
+                toggleSpinner(verifyOtpBtn, false);
+            }
+        });
+    </script>
+</body>
+</html>
