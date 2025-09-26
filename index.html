@@ -4,225 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp OTP Verification</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        :root {
-            --primary-color: #007bff;
-            --success-color: #28a745;
-            --error-color: #dc3545;
-            --light-gray: #f8f9fa;
-            --dark-gray: #343a40;
-            --border-color: #dee2e6;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            /* ✅ CHANGE: Replaced solid background with animated gradient */
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-            color: var(--dark-gray);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            overflow: hidden; /* Important for transition */
-        }
-
-        .form-section {
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-
-        .form-section.hidden {
-            opacity: 0;
-            transform: scale(0.95);
-            position: absolute; /* Hide without taking up space */
-            pointer-events: none;
-        }
-        
-        h1 {
-            text-align: center;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        p {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: #6c757d;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: 'Poppins', sans-serif;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-        }
-
-        button {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0.75rem;
-            background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-        
-        .message {
-            text-align: center;
-            margin-top: 1rem;
-            font-weight: 500;
-            min-height: 24px;
-        }
-
-        .message.success {
-            color: var(--success-color);
-        }
-
-        .message.error {
-            color: var(--error-color);
-        }
-        
-        /* Spinner Animation */
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        /* ✅ ADDED: Keyframes for the background gradient animation */
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
+        .hidden { display: none; }
+        .qr-code { margin: 1.5rem auto; border-radius: 8px; background: white; padding: 10px; }
+        .success-card { text-align: center; }
     </style>
 </head>
 <body>
-
+    <div class="bg"></div>
     <div class="container">
-       
-        <div id="send-otp-section" class="form-section">
-            <h1>Register</h1>
-            <p>Enter your details to get an OTP.</p>
-            <form id="send-otp-form">
-                <input type="text" id="username" name="username" placeholder="Username" required>
-                <input type="tel" id="whatsapp" name="whatsapp" placeholder="WhatsApp Number (e.g., +91...)" required>
-                <button type="submit" id="send-otp-btn">
-                    <span class="button-text">Send OTP</span>
-                </button>
-            </form>
-            <p id="send-otp-message" class="message"></p>
+
+        <div id="send-otp-section">
+            <div class="card">
+                <div class="brand">
+                    <h1>Register</h1>
+                    <p class="subtitle">Enter your details to get an OTP.</p>
+                </div>
+                <form id="send-otp-form" class="form" novalidate>
+                    <div class="field">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    </div>
+                    <div class="field">
+                        <label for="whatsapp">WhatsApp Number</label>
+                        <input type="tel" id="whatsapp" name="whatsapp" placeholder="+91..." required>
+                    </div>
+                    <div class="actions">
+                        <button type="submit" id="send-otp-btn" class="btn primary">Send OTP</button>
+                    </div>
+                    <p id="send-otp-message" class="status"></p>
+                </form>
+            </div>
         </div>
 
-      
-        <div id="verify-otp-section" class="form-section hidden">
-            <h1>Verify OTP</h1>
-            <p>Enter the code sent to your WhatsApp.</p>
-            <form id="verify-otp-form">
-                <input type="text" id="otp" name="otp" placeholder="6-Digit OTP" required pattern="\d{6}">
-                <button type="submit" id="verify-otp-btn">
-                     <span class="button-text">Verify</span>
-                </button>
-            </form>
-            <p id="verify-otp-message" class="message"></p>
+        <div id="verify-otp-section" class="hidden">
+            <div class="card">
+                <div class="brand">
+                    <h1>Verify OTP</h1>
+                    <p class="subtitle">Enter the code sent to your WhatsApp.</p>
+                </div>
+                <form id="verify-otp-form" class="form" novalidate>
+                    <div class="field">
+                        <label for="otp">OTP Code</label>
+                        <input type="text" id="otp" name="otp" placeholder="Enter 5 or 6 digit OTP" required>
+                    </div>
+                    <div class="actions">
+                        <button type="submit" id="verify-otp-btn" class="btn primary">Verify</button>
+                    </div>
+                    <p id="verify-otp-message" class="status"></p>
+                </form>
+            </div>
         </div>
+
+        <div id="payment-section" class="hidden">
+            <div class="card success-card">
+                <h1>Congratulations!</h1>
+                <p class="subtitle">You have successfully registered.<br>To add credits, please scan and pay the QR code below.</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=YOUR_UPI_ID" alt="Payment QR Code" class="qr-code">
+                <p>After payment, please send the transaction details to our WhatsApp:<br><strong>948213500</strong></p>
+            </div>
+        </div>
+
     </div>
 
     <script>
         const sendOtpSection = document.getElementById('send-otp-section');
         const verifyOtpSection = document.getElementById('verify-otp-section');
-
+        const paymentSection = document.getElementById('payment-section');
         const sendOtpForm = document.getElementById('send-otp-form');
         const verifyOtpForm = document.getElementById('verify-otp-form');
-
         const sendOtpBtn = document.getElementById('send-otp-btn');
         const verifyOtpBtn = document.getElementById('verify-otp-btn');
-
         const sendOtpMessage = document.getElementById('send-otp-message');
         const verifyOtpMessage = document.getElementById('verify-otp-message');
-
         let currentRequestId = '';
 
-        function toggleSpinner(button, show) {
-            const buttonText = button.querySelector('.button-text');
-            if (show) {
-                buttonText.innerHTML = '<div class="spinner"></div>';
-                button.disabled = true;
-            } else {
-                buttonText.innerHTML = button.id === 'send-otp-btn' ? 'Send OTP' : 'Verify';
-                button.disabled = false;
-            }
+        function toggleLoading(button, show) {
+            button.disabled = show;
+            button.textContent = show ? 'Loading...' : (button.id === 'send-otp-btn' ? 'Send OTP' : 'Verify');
         }
 
-        // --- Step 1: Handle the "Send OTP" form submission ---
         sendOtpForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            toggleSpinner(sendOtpBtn, true);
+            toggleLoading(sendOtpBtn, true);
             sendOtpMessage.textContent = '';
-
-            const data = {
-                username: sendOtpForm.username.value,
-                whatsapp: sendOtpForm.whatsapp.value
-            };
-            
+            const data = { username: sendOtpForm.username.value, whatsapp: sendOtpForm.whatsapp.value };
             const sendOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/b9365489-6292-476a-b2fe-7245338f1ea4';
             try {
                 const response = await fetch(sendOtpUrl, {
@@ -232,35 +99,32 @@
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || 'Failed to send OTP.');
-
                 currentRequestId = result.requestId;
-                sendOtpMessage.className = 'message success';
+                sendOtpMessage.style.color = 'var(--success)';
                 sendOtpMessage.textContent = 'OTP sent successfully!';
-                
                 setTimeout(() => {
                     sendOtpSection.classList.add('hidden');
                     verifyOtpSection.classList.remove('hidden');
                 }, 1000);
-
             } catch (error) {
-                sendOtpMessage.className = 'message error';
+                sendOtpMessage.style.color = 'var(--danger)';
                 sendOtpMessage.textContent = error.message;
             } finally {
-                toggleSpinner(sendOtpBtn, false);
+                toggleLoading(sendOtpBtn, false);
             }
         });
 
-        // --- Step 2: Handle the "Verify OTP" form submission ---
         verifyOtpForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            toggleSpinner(verifyOtpBtn, true);
+            const otpValue = verifyOtpForm.otp.value.trim();
+            if (otpValue.length < 5 || otpValue.length > 6 || !/^\d+$/.test(otpValue)) {
+                verifyOtpMessage.style.color = 'var(--danger)';
+                verifyOtpMessage.textContent = 'Please enter a valid 5 or 6 digit OTP.';
+                return;
+            }
+            toggleLoading(verifyOtpBtn, true);
             verifyOtpMessage.textContent = '';
-            
-            const data = {
-                requestId: currentRequestId,
-                otp: verifyOtpForm.otp.value
-            };
-
+            const data = { requestId: currentRequestId, otp: otpValue };
             const verifyOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/3c52a7ee-918f-49c2-9a0e-a9cc7be0ebe4';
 
             try {
@@ -269,17 +133,23 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
+
+                // ✅ --- REVERTED TO ORIGINAL LOGIC ---
+                // Now we expect a JSON response from the workflow.
                 const result = await response.json();
-                if (!response.ok) throw new Error(result.message || 'Verification failed.');
+                if (!response.ok) {
+                    throw new Error(result.message || 'Verification failed.');
+                }
                 
-                verifyOtpMessage.className = 'message success';
-                verifyOtpMessage.textContent = 'Verification successful! You are now registered.';
-                
+                // On success, transition to the payment section.
+                verifyOtpSection.classList.add('hidden');
+                paymentSection.classList.remove('hidden');
+
             } catch (error) {
-                verifyOtpMessage.className = 'message error';
+                verifyOtpMessage.style.color = 'var(--danger)';
                 verifyOtpMessage.textContent = error.message;
             } finally {
-                toggleSpinner(verifyOtpBtn, false);
+                toggleLoading(verifyOtpBtn, false);
             }
         });
     </script>
@@ -290,218 +160,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp OTP Verification</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --success-color: #28a745;
-            --error-color: #dc3545;
-            --light-gray: #f8f9fa;
-            --dark-gray: #343a40;
-            --border-color: #dee2e6;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-            color: var(--dark-gray);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .form-section {
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-
-        .form-section.hidden {
-            opacity: 0;
-            transform: scale(0.95);
-            position: absolute;
-            pointer-events: none;
-        }
-        
-        h1 {
-            text-align: center;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        p {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: #6c757d;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            font-family: 'Poppins', sans-serif;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-        }
-
-        button {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0.75rem;
-            background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-        
-        .message {
-            text-align: center;
-            margin-top: 1rem;
-            font-weight: 500;
-            min-height: 24px;
-        }
-
-        .message.success {
-            color: var(--success-color);
-        }
-
-        .message.error {
-            color: var(--error-color);
-        }
-        
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <title>Appzgen Technologies - AI-Powered Communication Solutions</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <!-- Step 1: Send OTP Form -->
-        <div id="send-otp-section" class="form-section">
-            <h1>Register</h1>
-            <p>Enter your details to get an OTP.</p>
-            <form id="send-otp-form">
-                <input type="text" id="username" name="username" placeholder="Username" required>
-                <input type="tel" id="whatsapp" name="whatsapp" placeholder="WhatsApp Number (e.g., +91...)" required>
-                <button type="submit" id="send-otp-btn">
-                    <span class="button-text">Send OTP</span>
-                </button>
-            </form>
-            <p id="send-otp-message" class="message"></p>
-        </div>
 
-        <!-- Step 2: Verify OTP Form (Initially Hidden) -->
-        <div id="verify-otp-section" class="form-section hidden">
-            <h1>Verify OTP</h1>
-            <p>Enter the code sent to your WhatsApp.</p>
-            <form id="verify-otp-form">
-                <input type="text" id="otp" name="otp" placeholder="6-Digit OTP" required pattern="\d{6}">
-                <button type="submit" id="verify-otp-btn">
-                     <span class="button-text">Verify</span>
-                </button>
-            </form>
-            <p id="verify-otp-message" class="message"></p>
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">
+                    <!-- ✅ Logo updated to image -->
+                    <img src="WhatsApp Image 2025-09-25 at 18.27.39.jpeg" alt="Appzgen Technologies Logo">
+                    <span>Appzgen</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#features">How It Works</a></li>
+                    <li><a href="#how-it-works-process">Process</a></li>
+                </ul>
+                <button class="btn btn-outline open-modal-btn">Get Started</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Intelligent Invoice Management, Right in Your WhatsApp</h1>
+                    <p class="subtitle">Effortlessly query your invoice data and automate financial reporting with our powerful AI-driven WhatsApp solution.</p>
+                    <button class="btn btn-primary open-modal-btn">Automate Your Invoicing</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- "How the Service Works" Section -->
+        <section id="features" class="service-description">
+            <div class="container">
+                <div class="service-content">
+                    <div class="service-text">
+                        <h2>Ask Questions. Get Instant Invoice Insights.</h2>
+                        <p>Our AI-powered service connects directly to your invoicing data, allowing you to get real-time answers and reports on WhatsApp. No more searching through spreadsheets or complex software.</p>
+                        <ul>
+                            <li><strong>AI-Powered Querying:</strong> Ask for invoices from any date, check payment statuses, or get sales summaries in plain English.</li>
+                            <li><strong>24/7 Secure Access:</strong> Your financial data is securely accessible anytime, directly from your WhatsApp.</li>
+                            <li><strong>Automated Invoicing:</strong> Seamlessly upload your business invoice details and let our system handle the rest.</li>
+                        </ul>
+                    </div>
+                    <div class="service-visual">
+                        <div class="phone-mockup">
+                            <div class="phone-screen">
+                                <div class="chat-bubble received">
+                                    <span>Show me last week's invoices for 'Client XYZ'</span>
+                                </div>
+                                <div class="chat-bubble sent">
+                                    <p><strong>Invoice Summary (18-24 Sep):</strong></p>
+                                    <p> • INV-0078: ₹1,25,000 (Paid)<br> • INV-0081: ₹2,10,000 (Pending)</p>
+                                    <span>Fetching details now...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Process Section -->
+        <section id="how-it-works-process" class="how-it-works">
+            <div class="container">
+                <h2>From Setup to Query in Three Simple Steps</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-icon">1</div>
+                        <h3>Connect Your Business</h3>
+                        <p>Securely register your business and get your dedicated WhatsApp service number.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">2</div>
+                        <h3>Upload Your Data</h3>
+                        <p>Easily provide your business invoice details to our secure system.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">3</div>
+                        <h3>Query on WhatsApp</h3>
+                        <p>Start asking questions like 'Total sales in August?' and get instant replies.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Appzgen Technologies LLP. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Modal for Registration -->
+    <div id="register-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <div id="verification-container">
+                <!-- SECTION 1: SEND OTP -->
+                <div id="send-otp-section">
+                    <div class="card">
+                        <div class="brand">
+                            <h2>Connect Your Business Today</h2>
+                            <p class="subtitle">Register below to get started with our WhatsApp invoicing solution.</p>
+                        </div>
+                        <form id="send-otp-form" class="form" novalidate>
+                            <div class="field">
+                                <label for="username">Name</label>
+                                <input type="text" id="username" name="username" placeholder="Enter your name" required>
+                            </div>
+                            <div class="field">
+                                <label for="whatsapp">WhatsApp Number</label>
+                                <input type="tel" id="whatsapp" name="whatsapp" placeholder="e.g., +91..." required>
+                            </div>
+                            <div class="actions">
+                                <button type="submit" id="send-otp-btn" class="btn btn-primary">Request OTP</button>
+                            </div>
+                            <p id="send-otp-message" class="status"></p>
+                        </form>
+                    </div>
+                </div>
+                <!-- Other sections (verify-otp, payment) will be controlled by JS -->
+                <div id="verify-otp-section" class="hidden">
+                     <div class="card">
+                        <div class="brand">
+                            <h2>Verify Your Number</h2>
+                            <p class="subtitle">Enter the code we sent to your WhatsApp.</p>
+                        </div>
+                        <form id="verify-otp-form" class="form" novalidate>
+                            <div class="field">
+                                <label for="otp">Verification Code</label>
+                                <input type="text" id="otp" name="otp" placeholder="Enter 5 or 6 digit code" required>
+                            </div>
+                            <div class="actions">
+                                <button type="submit" id="verify-otp-btn" class="btn btn-primary">Complete Verification</button>
+                            </div>
+                            <p id="verify-otp-message" class="status"></p>
+                        </form>
+                    </div>
+                </div>
+                <div id="payment-section" class="hidden">
+                    <div class="card success-card">
+                        <h2>Verification Successful!</h2>
+                        <p class="subtitle">To activate your service, please scan the QR code to add credits.</p>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=YOUR_UPI_ID" alt="Payment QR Code" class="qr-code">
+                        <p>After paying, please send transaction details to our WhatsApp:<br><strong>948213500</strong></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+
     <script>
+        // Modal handling
+        const registerModal = document.getElementById('register-modal');
+        const openModalBtns = document.querySelectorAll('.open-modal-btn');
+        const closeModalBtn = document.querySelector('.close-modal-btn');
+
+        openModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                registerModal.classList.remove('hidden');
+            });
+        });
+
+        const closeModal = () => {
+            registerModal.classList.add('hidden');
+        };
+
+        closeModalBtn.addEventListener('click', closeModal);
+        registerModal.addEventListener('click', (event) => {
+            if (event.target === registerModal) {
+                closeModal();
+            }
+        });
+
+        // Form handling logic
         const sendOtpSection = document.getElementById('send-otp-section');
         const verifyOtpSection = document.getElementById('verify-otp-section');
+        const paymentSection = document.getElementById('payment-section');
         const sendOtpForm = document.getElementById('send-otp-form');
         const verifyOtpForm = document.getElementById('verify-otp-form');
         const sendOtpBtn = document.getElementById('send-otp-btn');
         const verifyOtpBtn = document.getElementById('verify-otp-btn');
         const sendOtpMessage = document.getElementById('send-otp-message');
         const verifyOtpMessage = document.getElementById('verify-otp-message');
-
         let currentRequestId = '';
 
-        function toggleSpinner(button, show) {
-            const buttonText = button.querySelector('.button-text');
-            if (show) {
-                buttonText.innerHTML = '<div class="spinner"></div>';
-                button.disabled = true;
-            } else {
-                buttonText.innerHTML = button.id === 'send-otp-btn' ? 'Send OTP' : 'Verify';
-                button.disabled = false;
-            }
+        function toggleLoading(button, show) {
+            button.disabled = show;
+            const originalText = button.id === 'send-otp-btn' ? 'Request OTP' : 'Complete Verification';
+            button.textContent = show ? 'Processing...' : originalText;
         }
 
         sendOtpForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            toggleSpinner(sendOtpBtn, true);
+            toggleLoading(sendOtpBtn, true);
             sendOtpMessage.textContent = '';
-
-            const data = {
-                username: sendOtpForm.username.value,
-                whatsapp: sendOtpForm.whatsapp.value
-            };
-            
+            const data = { username: sendOtpForm.username.value, whatsapp: sendOtpForm.whatsapp.value };
             const sendOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/b9365489-6292-476a-b2fe-7245338f1ea4';
+
             try {
                 const response = await fetch(sendOtpUrl, {
                     method: 'POST',
@@ -510,34 +373,32 @@
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || 'Failed to send OTP.');
-
                 currentRequestId = result.requestId;
-                sendOtpMessage.className = 'message success';
+                sendOtpMessage.className = 'status success';
                 sendOtpMessage.textContent = 'OTP sent successfully!';
-                
                 setTimeout(() => {
                     sendOtpSection.classList.add('hidden');
                     verifyOtpSection.classList.remove('hidden');
                 }, 1000);
-
             } catch (error) {
-                sendOtpMessage.className = 'message error';
+                sendOtpMessage.className = 'status error';
                 sendOtpMessage.textContent = error.message;
             } finally {
-                toggleSpinner(sendOtpBtn, false);
+                toggleLoading(sendOtpBtn, false);
             }
         });
 
         verifyOtpForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            toggleSpinner(verifyOtpBtn, true);
+            const otpValue = verifyOtpForm.otp.value.trim();
+            if (otpValue.length < 5 || otpValue.length > 6 || !/^\d+$/.test(otpValue)) {
+                verifyOtpMessage.className = 'status error';
+                verifyOtpMessage.textContent = 'Please enter a valid 5 or 6 digit OTP.';
+                return;
+            }
+            toggleLoading(verifyOtpBtn, true);
             verifyOtpMessage.textContent = '';
-            
-            const data = {
-                requestId: currentRequestId,
-                otp: verifyOtpForm.otp.value
-            };
-
+            const data = { requestId: currentRequestId, otp: otpValue };
             const verifyOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/3c52a7ee-918f-49c2-9a0e-a9cc7be0ebe4';
 
             try {
@@ -548,15 +409,15 @@
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || 'Verification failed.');
-                
-                verifyOtpMessage.className = 'message success';
-                verifyOtpMessage.textContent = 'Verification successful! You are now registered.';
-                
+
+                verifyOtpSection.classList.add('hidden');
+                paymentSection.classList.remove('hidden');
+
             } catch (error) {
-                verifyOtpMessage.className = 'message error';
+                verifyOtpMessage.className = 'status error';
                 verifyOtpMessage.textContent = error.message;
             } finally {
-                toggleSpinner(verifyOtpBtn, false);
+                toggleLoading(verifyOtpBtn, false);
             }
         });
     </script>
