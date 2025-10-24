@@ -3,163 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp OTP Verification</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .hidden { display: none; }
-        .qr-code { margin: 1.5rem auto; border-radius: 8px; background: white; padding: 10px; }
-        .success-card { text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="bg"></div>
-    <div class="container">
-
-        <div id="send-otp-section">
-            <div class="card">
-                <div class="brand">
-                    <h1>Register</h1>
-                    <p class="subtitle">Enter your details to get an OTP.</p>
-                </div>
-                <form id="send-otp-form" class="form" novalidate>
-                    <div class="field">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
-                    </div>
-                    <div class="field">
-                        <label for="whatsapp">WhatsApp Number</label>
-                        <input type="tel" id="whatsapp" name="whatsapp" placeholder="+91..." required>
-                    </div>
-                    <div class="actions">
-                        <button type="submit" id="send-otp-btn" class="btn primary">Send OTP</button>
-                    </div>
-                    <p id="send-otp-message" class="status"></p>
-                </form>
-            </div>
-        </div>
-
-        <div id="verify-otp-section" class="hidden">
-            <div class="card">
-                <div class="brand">
-                    <h1>Verify OTP</h1>
-                    <p class="subtitle">Enter the code sent to your WhatsApp.</p>
-                </div>
-                <form id="verify-otp-form" class="form" novalidate>
-                    <div class="field">
-                        <label for="otp">OTP Code</label>
-                        <input type="text" id="otp" name="otp" placeholder="Enter 5 or 6 digit OTP" required>
-                    </div>
-                    <div class="actions">
-                        <button type="submit" id="verify-otp-btn" class="btn primary">Verify</button>
-                    </div>
-                    <p id="verify-otp-message" class="status"></p>
-                </form>
-            </div>
-        </div>
-
-        <div id="payment-section" class="hidden">
-            <div class="card success-card">
-                <h1>Congratulations!</h1>
-                <p class="subtitle">You have successfully registered.<br>To add credits, please scan and pay the QR code below.</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=YOUR_UPI_ID" alt="Payment QR Code" class="qr-code">
-                <p>After payment, please send the transaction details to our WhatsApp:<br><strong>948213500</strong></p>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        const sendOtpSection = document.getElementById('send-otp-section');
-        const verifyOtpSection = document.getElementById('verify-otp-section');
-        const paymentSection = document.getElementById('payment-section');
-        const sendOtpForm = document.getElementById('send-otp-form');
-        const verifyOtpForm = document.getElementById('verify-otp-form');
-        const sendOtpBtn = document.getElementById('send-otp-btn');
-        const verifyOtpBtn = document.getElementById('verify-otp-btn');
-        const sendOtpMessage = document.getElementById('send-otp-message');
-        const verifyOtpMessage = document.getElementById('verify-otp-message');
-        let currentRequestId = '';
-
-        function toggleLoading(button, show) {
-            button.disabled = show;
-            button.textContent = show ? 'Loading...' : (button.id === 'send-otp-btn' ? 'Send OTP' : 'Verify');
-        }
-
-        sendOtpForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            toggleLoading(sendOtpBtn, true);
-            sendOtpMessage.textContent = '';
-            const data = { username: sendOtpForm.username.value, whatsapp: sendOtpForm.whatsapp.value };
-            const sendOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/b9365489-6292-476a-b2fe-7245338f1ea4';
-            try {
-                const response = await fetch(sendOtpUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.message || 'Failed to send OTP.');
-                currentRequestId = result.requestId;
-                sendOtpMessage.style.color = 'var(--success)';
-                sendOtpMessage.textContent = 'OTP sent successfully!';
-                setTimeout(() => {
-                    sendOtpSection.classList.add('hidden');
-                    verifyOtpSection.classList.remove('hidden');
-                }, 1000);
-            } catch (error) {
-                sendOtpMessage.style.color = 'var(--danger)';
-                sendOtpMessage.textContent = error.message;
-            } finally {
-                toggleLoading(sendOtpBtn, false);
-            }
-        });
-
-        verifyOtpForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const otpValue = verifyOtpForm.otp.value.trim();
-            if (otpValue.length < 5 || otpValue.length > 6 || !/^\d+$/.test(otpValue)) {
-                verifyOtpMessage.style.color = 'var(--danger)';
-                verifyOtpMessage.textContent = 'Please enter a valid 5 or 6 digit OTP.';
-                return;
-            }
-            toggleLoading(verifyOtpBtn, true);
-            verifyOtpMessage.textContent = '';
-            const data = { requestId: currentRequestId, otp: otpValue };
-            const verifyOtpUrl = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/3c52a7ee-918f-49c2-9a0e-a9cc7be0ebe4';
-
-            try {
-                const response = await fetch(verifyOtpUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                // ✅ --- REVERTED TO ORIGINAL LOGIC ---
-                // Now we expect a JSON response from the workflow.
-                const result = await response.json();
-                if (!response.ok) {
-                    throw new Error(result.message || 'Verification failed.');
-                }
-                
-                // On success, transition to the payment section.
-                verifyOtpSection.classList.add('hidden');
-                paymentSection.classList.remove('hidden');
-
-            } catch (error) {
-                verifyOtpMessage.style.color = 'var(--danger)';
-                verifyOtpMessage.textContent = error.message;
-            } finally {
-                toggleLoading(verifyOtpBtn, false);
-            }
-        });
-    </script>
-</body>
-</html> -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appzgen Technologies - AI-Powered Communication Solutions</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -170,7 +13,6 @@
         <div class="container">
             <nav class="navbar">
                 <a href="#" class="logo">
-                    <!-- ✅ Logo updated to image -->
                     <img src="WhatsApp Image 2025-09-25 at 18.27.39.jpeg" alt="Appzgen Technologies Logo">
                     <span>Appzgen</span>
                 </a>
@@ -184,7 +26,7 @@
     </header>
 
     <main>
-        <!-- Hero Section -->
+        
         <section class="hero">
             <div class="container">
                 <div class="hero-content">
@@ -195,7 +37,7 @@
             </div>
         </section>
 
-        <!-- "How the Service Works" Section -->
+        // "How the Service Works" Section 
         <section id="features" class="service-description">
             <div class="container">
                 <div class="service-content">
@@ -209,24 +51,14 @@
                         </ul>
                     </div>
                     <div class="service-visual">
-                        <div class="phone-mockup">
-                            <div class="phone-screen">
-                                <div class="chat-bubble received">
-                                    <span>Show me last week's invoices for 'Client XYZ'</span>
-                                </div>
-                                <div class="chat-bubble sent">
-                                    <p><strong>Invoice Summary (18-24 Sep):</strong></p>
-                                    <p> • INV-0078: ₹1,25,000 (Paid)<br> • INV-0081: ₹2,10,000 (Pending)</p>
-                                    <span>Fetching details now...</span>
-                                </div>
-                            </div>
-                        </div>
+                        // ✅ Visual representation updated to the new image 
+                        <img src="Gemini_Generated_Image_rd7728rd7728rd77.png" alt="WhatsApp Invoice Bot Chat" class="service-image">
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- How It Works Process Section -->
+        //How It Works Process Section 
         <section id="how-it-works-process" class="how-it-works">
             <div class="container">
                 <h2>From Setup to Query in Three Simple Steps</h2>
@@ -257,12 +89,12 @@
         </div>
     </footer>
 
-    <!-- Modal for Registration -->
+    // Modal for Registration 
     <div id="register-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <button class="close-modal-btn">&times;</button>
             <div id="verification-container">
-                <!-- SECTION 1: SEND OTP -->
+                // SECTION 1: SEND OTP 
                 <div id="send-otp-section">
                     <div class="card">
                         <div class="brand">
@@ -285,7 +117,7 @@
                         </form>
                     </div>
                 </div>
-                <!-- Other sections (verify-otp, payment) will be controlled by JS -->
+                // Other sections (verify-otp, payment) will be controlled by JS 
                 <div id="verify-otp-section" class="hidden">
                      <div class="card">
                         <div class="brand">
@@ -409,6 +241,270 @@
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || 'Verification failed.');
+
+                verifyOtpSection.classList.add('hidden');
+                paymentSection.classList.remove('hidden');
+
+            } catch (error) {
+                verifyOtpMessage.className = 'status error';
+                verifyOtpMessage.textContent = error.message;
+            } finally {
+                toggleLoading(verifyOtpBtn, false);
+            }
+        });
+    </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appzgen Technologies - Invoice Management Solutions</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-teal-band">
+            <div class="container logo-container">
+                <img src="logo_appzgen_triangle.jpeg" alt="Appzgen Technologies Logo" class="header-logo">
+            </div>
+        </div>
+        <nav class="navbar">
+            <div class="container">
+                <ul class="nav-links">
+                    <li><a href="#features">How It Works</a></li>
+                    <li><a href="#how-it-works-process">Process</a></li>
+                </ul>
+                </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="container hero-container-light">
+                <div class="hero-content-light">
+                    <h1>Intelligent Invoice Management, Right in Your WhatsApp</h1>
+                    <p class="subtitle">Effortlessly query your invoice data and automate financial reporting with our powerful AI-driven WhatsApp solution.</p>
+                    <button class="btn btn-primary open-modal-btn">Automate Your Invoicing</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="service-description-light">
+            <div class="container">
+                <div class="service-content">
+                    <div class="service-text">
+                        <h2>Ask Questions. Get Instant Invoice Insights.</h2>
+                        <p>Our AI-powered service connects directly to your invoicing data, allowing you to get real-time answers and reports on WhatsApp. No more searching through spreadsheets or complex software.</p>
+                        <ul>
+                            <li><strong>AI-Powered Querying:</strong> Ask for invoices from any date, check payment statuses, or get sales summaries in plain English.</li>
+                            <li><strong>24/7 Secure Access:</strong> Your financial data is securely accessible anytime, directly from your WhatsApp.</li>
+                            <li><strong>Automated Invoicing:</strong> Seamlessly upload your business invoice details and let our system handle the rest.</li>
+                        </ul>
+                    </div>
+                    <div class="service-visual">
+                        <img src="Gemini_Generated_Image_rd7728rd7728rd77.png" alt="WhatsApp Invoice Bot Chat" class="service-image">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works-process" class="how-it-works-light">
+            <div class="container">
+                <h2>From AI Query to Instant Insights</h2>
+                
+                <div class="process-image-container">
+                    <img src="Gemini_Generated_Image_nu6m5enu6m5enu6m.png" alt="Three steps process: Ask, AI Processes, Get Instant Insights" class="process-flow-image">
+                </div>
+                
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="container">
+                <p class="footer-text-top">This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.</p>
+                <p class="footer-text-contact">Contact us to discuss how we can help streamline your operations and drive growth through innovative technology solutions. Send us a message, and we will get back to you soon.</p>
+                
+                <a href="https://wa.me/919482135000" class="btn btn-whatsapp">
+                    Message us on WhatsApp
+                </a>
+
+                <div class="footer-details">
+                    <h3>AppZGen Technologies LLP</h3>
+                    <p>Mysuru, Karnataka, India</p>
+                    <p>+91-9482135000</p>
+                </div>
+
+                <div class="footer-hours">
+                    <h3>Hours</h3>
+                    <div class="hours-dropdown">
+                        Open today: 09:00 am - 05:00 pm ▼
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p class="copyright">Copyright © 2024 AppZGen Technologies LLP - All Rights Reserved.</p>
+                <div class="powered-by">
+                    Powered by
+                    <img src="godaddy_logo.png" alt="GoDaddy Airo Logo">
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="register-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <div id="verification-container">
+                <div id="send-otp-section">
+                    <div class="card">
+                        <div class="brand">
+                            <h2>Connect Your Business Today</h2>
+                            <p class="subtitle">Register below to get started with our WhatsApp invoicing solution.</p>
+                        </div>
+                        <form id="send-otp-form" class="form" novalidate>
+                            <div class="field">
+                                <label for="username">Name</label>
+                                <input type="text" id="username" name="username" placeholder="Enter your name" required>
+                            </div>
+                            <div class="field">
+                                <label for="whatsapp">WhatsApp Number</label>
+                                <input type="tel" id="whatsapp" name="whatsapp" placeholder="e.g., +91..." required>
+                            </div>
+                            <div class="actions">
+                                <button type="submit" id="send-otp-btn" class="btn btn-primary">Request OTP</button>
+                            </div>
+                            <p id="send-otp-message" class="status"></p>
+                        </form>
+                    </div>
+                </div>
+                <div id="verify-otp-section" class="hidden">
+                     <div class="card">
+                        <div class="brand">
+                            <h2>Verify Your Number</h2>
+                            <p class="subtitle">Enter the code we sent to your WhatsApp.</p>
+                        </div>
+                        <form id="verify-otp-form" class="form" novalidate>
+                            <div class="field">
+                                <label for="otp">Verification Code</label>
+                                <input type="text" id="otp" name="otp" placeholder="Enter 5 or 6 digit code" required>
+                            </div>
+                            <div class="actions">
+                                <button type="submit" id="verify-otp-btn" class="btn btn-primary">Complete Verification</button>
+                            </div>
+                            <p id="verify-otp-message" class="status"></p>
+                        </form>
+                    </div>
+                </div>
+                <div id="payment-section" class="hidden">
+                    <div class="card success-card">
+                        <h2>Verification Successful!</h2>
+                        <p class="subtitle">To activate your service, please scan the QR code to add credits.</p>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=YOUR_UPI_ID" alt="Payment QR Code" class="qr-code">
+                        <p>After paying, please send transaction details to our WhatsApp:<br><strong>948213500</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Modal handling scripts - re-enabled for the "Automate Your Invoicing" button
+        const registerModal = document.getElementById('register-modal');
+        const openModalBtns = document.querySelectorAll('.open-modal-btn'); // Re-selected
+        const closeModalBtn = document.querySelector('.close-modal-btn');
+        const sendOtpSection = document.getElementById('send-otp-section');
+        const verifyOtpSection = document.getElementById('verify-otp-section');
+        const paymentSection = document.getElementById('payment-section');
+        const sendOtpForm = document.getElementById('send-otp-form');
+        const verifyOtpForm = document.getElementById('verify-otp-form');
+        const sendOtpBtn = document.getElementById('send-otp-btn');
+        const verifyOtpBtn = document.getElementById('verify-otp-btn');
+        const sendOtpMessage = document.getElementById('send-otp-message');
+        const verifyOtpMessage = document.getElementById('verify-otp-message');
+        let currentRequestId = '';
+
+        openModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                sendOtpSection.classList.remove('hidden');
+                verifyOtpSection.classList.add('hidden');
+                paymentSection.classList.add('hidden');
+                sendOtpForm.reset();
+                verifyOtpForm.reset();
+                sendOtpMessage.textContent = '';
+                verifyOtpMessage.textContent = '';
+                registerModal.classList.remove('hidden');
+            });
+        });
+
+        const closeModal = () => {
+            registerModal.classList.add('hidden');
+        };
+
+        closeModalBtn.addEventListener('click', closeModal);
+        registerModal.addEventListener('click', (event) => {
+            if (event.target === registerModal) {
+                closeModal();
+            }
+        });
+
+        function toggleLoading(button, show) {
+            button.disabled = show;
+            const originalText = button.id === 'send-otp-btn' ? 'Request OTP' : 'Complete Verification';
+            button.textContent = show ? 'Processing...' : originalText;
+        }
+
+        sendOtpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            toggleLoading(sendOtpBtn, true);
+            sendOtpMessage.textContent = '';
+            
+            try {
+                // --- SIMULATION START (Replace with real API call) ---
+                await new Promise(resolve => setTimeout(resolve, 1500)); 
+                currentRequestId = 'simulated_request_123';
+                // --- SIMULATION END ---
+
+                sendOtpMessage.className = 'status success';
+                sendOtpMessage.textContent = 'OTP sent successfully! (Simulated)';
+                setTimeout(() => {
+                    sendOtpSection.classList.add('hidden');
+                    verifyOtpSection.classList.remove('hidden');
+                }, 1000);
+            } catch (error) {
+                sendOtpMessage.className = 'status error';
+                sendOtpMessage.textContent = 'Failed to send OTP (Simulated Error)';
+            } finally {
+                toggleLoading(sendOtpBtn, false);
+            }
+        });
+
+        verifyOtpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const otpValue = verifyOtpForm.otp.value.trim();
+            if (otpValue.length < 5 || otpValue.length > 6 || !/^\d+$/.test(otpValue)) {
+                verifyOtpMessage.className = 'status error';
+                verifyOtpMessage.textContent = 'Please enter a valid 5 or 6 digit OTP.';
+                return;
+            }
+            toggleLoading(verifyOtpBtn, true);
+            verifyOtpMessage.textContent = '';
+
+            try {
+                // --- SIMULATION START (Replace with real API call) ---
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                if (otpValue !== '123456') { // Simple check, replace with actual OTP validation
+                    throw new Error('Verification failed. Invalid OTP.');
+                }
+                // --- SIMULATION END ---
 
                 verifyOtpSection.classList.add('hidden');
                 paymentSection.classList.remove('hidden');
