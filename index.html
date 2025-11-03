@@ -160,6 +160,10 @@
 
 
     <script>
+        // ===== n8n webhook endpoints =====
+        const SEND_OTP_WEBHOOK_URL = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/b9365489-6292-476a-b2fe-7245338f1ea4';   // Send OTP
+        const VERIFY_OTP_WEBHOOK_URL = 'https://n8n-image2doc-u35379.vm.elestio.app/webhook/3c52a7ee-918f-49c2-9a0e-a9cc7be0ebe4'; // Verify OTP
+      
         // Modal handling scripts - re-enabled for the "Automate Your Invoicing" button
         const registerModal = document.getElementById('register-modal');
         const openModalBtns = document.querySelectorAll('.open-modal-btn'); // Re-selected
@@ -173,92 +177,177 @@
         const verifyOtpBtn = document.getElementById('verify-otp-btn');
         const sendOtpMessage = document.getElementById('send-otp-message');
         const verifyOtpMessage = document.getElementById('verify-otp-message');
+      
         let currentRequestId = '';
-
-        openModalBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                sendOtpSection.classList.remove('hidden');
-                verifyOtpSection.classList.add('hidden');
-                paymentSection.classList.add('hidden');
-                sendOtpForm.reset();
-                verifyOtpForm.reset();
-                sendOtpMessage.textContent = '';
-                verifyOtpMessage.textContent = '';
-                registerModal.classList.remove('hidden');
+        let leadName = '';
+        let leadWhatsapp = '';
+      
+        // ===== Helpers =====
+        function generateRequestId() {
+          return 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        }
+      
+        function getUtmParams() {
+          const p = new URLSearchParams(window.location.search);
+          const keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'];
+          const out = {};
+          keys.forEach(k => { if (p.get(k)) out[k] = p.get(k); });
+          return out;
+        }
+      
+        function basePayload(eventName, data = {}) {
+          return {
+            event: eventName,
+            requestId: currentRequestId || generateRequestId(),
+            data,
+            meta: {
+              timestamp: new Date().toISOString(),
+              pageUrl: window.location.href,
+              userAgent: navigator.userAgent,
+              utm: getUtmParams()
+            }
+          };
+        }
+      
+        async function postJSON(url, body) {
+          try {
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+              mode: 'cors'
             });
+            const text = await res.text();
+            let data = null;
+            try { data = text ? JSON.parse(text) : null; } catch (_) {}
+            return { ok: res.ok, status: res.status, data };
+          } catch (err) {
+            return { ok: false, status: 0, data: { error: String(err?.message || err) } };
+          }
+        }
+      
+        function toggleLoading(button, show) {
+          button.disabled = show;
+          const originalText = button.id === 'send-otp-btn' ? 'Request OTP' : 'Complete Verification';
+          button.textContent = show ? 'Processing...' : originalText;
+        }
+      
+        // ===== Modal open/close =====
+        openModalBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            currentRequestId = generateRequestId();
+            leadName = '';
+            leadWhatsapp = '';
+            sendOtpSection.classList.remove('hidden');
+            verifyOtpSection.classList.add('hidden');
+            paymentSection.classList.add('hidden');
+            sendOtpForm.reset();
+            verifyOtpForm.reset();
+            sendOtpMessage.textContent = '';
+            sendOtpMessage.className = 'status';
+            verifyOtpMessage.textContent = '';
+            verifyOtpMessage.className = 'status';
+            registerModal.classList.remove('hidden');
+          });
         });
-
+      
         const closeModal = () => {
-            registerModal.classList.add('hidden');
+          registerModal.classList.add('hidden');
         };
-
+      
         closeModalBtn.addEventListener('click', closeModal);
         registerModal.addEventListener('click', (event) => {
-            if (event.target === registerModal) {
-                closeModal();
-            }
+          if (event.target === registerModal) {
+            closeModal();
+          }
         });
-
-        function toggleLoading(button, show) {
-            button.disabled = show;
-            const originalText = button.id === 'send-otp-btn' ? 'Request OTP' : 'Complete Verification';
-            button.textContent = show ? 'Processing...' : originalText;
-        }
-
+      
+        // ===== Handlers =====
+      
+        // Send OTP -> first webhook
         sendOtpForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            toggleLoading(sendOtpBtn, true);
-            sendOtpMessage.textContent = '';
-            
-            try {
-                // --- SIMULATION START (Replace with real API call) ---
-                await new Promise(resolve => setTimeout(resolve, 1500)); 
-                currentRequestId = 'simulated_request_123';
-                // --- SIMULATION END ---
-
-                sendOtpMessage.className = 'status success';
-                sendOtpMessage.textContent = 'OTP sent successfully! (Simulated)';
-                setTimeout(() => {
-                    sendOtpSection.classList.add('hidden');
-                    verifyOtpSection.classList.remove('hidden');
-                }, 1000);
-            } catch (error) {
-                sendOtpMessage.className = 'status error';
-                sendOtpMessage.textContent = 'Failed to send OTP (Simulated Error)';
-            } finally {
-                toggleLoading(sendOtpBtn, false);
+          event.preventDefault();
+          if (!sendOtpForm.checkValidity()) {
+            sendOtpForm.reportValidity();
+            return;
+          }
+      
+          toggleLoading(sendOtpBtn, true);
+          sendOtpMessage.textContent = '';
+          sendOtpMessage.className = 'status';
+      
+          const name = sendOtpForm.username.value.trim();
+          const whatsapp = sendOtpForm.whatsapp.value.trim();
+      
+          leadName = name;
+          leadWhatsapp = whatsapp;
+      
+          try {
+            const payload = basePayload('otp_requested', { name, whatsapp });
+            const res = await postJSON(SEND_OTP_WEBHOOK_URL, payload);
+      
+            if (res.ok) {
+              sendOtpMessage.className = 'status success';
+              sendOtpMessage.textContent = res.data?.message || 'OTP sent successfully!';
+              setTimeout(() => {
+                sendOtpSection.classList.add('hidden');
+                verifyOtpSection.classList.remove('hidden');
+              }, 800);
+            } else {
+              sendOtpMessage.className = 'status error';
+              sendOtpMessage.textContent = res.data?.message || 'Failed to send OTP. Please try again.';
             }
+          } catch (error) {
+            sendOtpMessage.className = 'status error';
+            sendOtpMessage.textContent = 'Network error while sending OTP.';
+          } finally {
+            toggleLoading(sendOtpBtn, false);
+          }
         });
-
+      
+        // Verify OTP -> second webhook
         verifyOtpForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const otpValue = verifyOtpForm.otp.value.trim();
-            if (otpValue.length < 5 || otpValue.length > 6 || !/^\d+$/.test(otpValue)) {
-                verifyOtpMessage.className = 'status error';
-                verifyOtpMessage.textContent = 'Please enter a valid 5 or 6 digit OTP.';
-                return;
+          event.preventDefault();
+          const otpValue = verifyOtpForm.otp.value.trim();
+          if (otpValue.length < 5 || otpValue.length > 6 || !/^\d+$/.test(otpValue)) {
+            verifyOtpMessage.className = 'status error';
+            verifyOtpMessage.textContent = 'Please enter a valid 5 or 6 digit OTP.';
+            return;
+          }
+      
+          toggleLoading(verifyOtpBtn, true);
+          verifyOtpMessage.textContent = '';
+          verifyOtpMessage.className = 'status';
+      
+          try {
+            const payload = basePayload('verify_otp', {
+              name: leadName,
+              whatsapp: leadWhatsapp,
+              otp: otpValue
+            });
+      
+            const res = await postJSON(VERIFY_OTP_WEBHOOK_URL, payload);
+      
+            const verified = Boolean(
+              (res.data && (res.data.verified === true || res.data.ok === true || res.data.status === 'success')) || res.ok
+            );
+      
+            if (verified) {
+              verifyOtpMessage.className = 'status success';
+              verifyOtpMessage.textContent = res.data?.message || 'Verification successful!';
+              verifyOtpSection.classList.add('hidden');
+              paymentSection.classList.remove('hidden');
+            } else {
+              verifyOtpMessage.className = 'status error';
+              verifyOtpMessage.textContent = res.data?.message || 'Verification failed. Invalid OTP.';
             }
-            toggleLoading(verifyOtpBtn, true);
-            verifyOtpMessage.textContent = '';
-
-            try {
-                // --- SIMULATION START (Replace with real API call) ---
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                if (otpValue !== '123456') { // Simple check, replace with actual OTP validation
-                    throw new Error('Verification failed. Invalid OTP.');
-                }
-                // --- SIMULATION END ---
-
-                verifyOtpSection.classList.add('hidden');
-                paymentSection.classList.remove('hidden');
-
-            } catch (error) {
-                verifyOtpMessage.className = 'status error';
-                verifyOtpMessage.textContent = error.message;
-            } finally {
-                toggleLoading(verifyOtpBtn, false);
-            }
+          } catch (error) {
+            verifyOtpMessage.className = 'status error';
+            verifyOtpMessage.textContent = 'Network error during verification.';
+          } finally {
+            toggleLoading(verifyOtpBtn, false);
+          }
         });
-    </script>
+      </script>
 </body>
 </html>

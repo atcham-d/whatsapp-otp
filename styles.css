@@ -423,7 +423,7 @@ body {
 }
 
 .card .brand h2 { text-align: center; font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--modal-text-light); }
-.card .brand .subtitle { text-align: center; color: var(--modal-text-muted); margin-bottom: 2rem; }
+.card .brand .subtitle { text-align: center; color: var(--bg-section); margin-bottom: 2rem; }
 .form { display: grid; gap: 1.2rem; }
 .field label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--modal-text-muted); }
 .field input { 
@@ -432,7 +432,7 @@ body {
     border-radius: 8px; 
     border: 1px solid var(--modal-border-color); 
     background-color: #f8f8f8; 
-    color: var(--modal-text-light); 
+    color: var(--modal-bg-dark); 
     font-size: 1rem; 
     font-family: 'Inter', sans-serif; 
 }
